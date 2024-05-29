@@ -2,25 +2,24 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-
-// Importa las rutas de tu API
-import  vendedorRoutes  from './src/routes/vendedoresRoutes.js';
-import {MONGO_URI, MONGO_DB_NAME_PROD, MONGO_DB_NAME_TEST} from "./src/config/config.js";
-
-// iportacion para la doc
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
+import  vendedorRoutes  from './src/routes/vendedoresRoutes.js';
+import uploadRoutes from './src/routes/uploadRotes.js';
+import {MONGO_URI, MONGO_DB_NAME_PROD, MONGO_DB_NAME_TEST} from "./src/config/config.js"
+
 
 // Configuración de Express
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-const swaggerDocument = YAML.load('./src/doc/vendedores.yaml'); // Ruta a tu archivo de especificación Swagger
+const swaggerDocument = YAML.load/* ('./src/doc/Vendedores.yaml') */;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/public', express.static('public'));
 
 
 
@@ -32,7 +31,7 @@ mongoose.connect(`${MONGO_URI}${MONGO_DB_NAME_PROD}`)
 // Rutas de la API
 app.use('/api/vendedores', vendedorRoutes);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-//agregar rutas faltantes
+app.use('/upload', uploadRoutes);
 
 
 // Manejo de rutas no encontradas

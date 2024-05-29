@@ -35,17 +35,14 @@ router.post('/', async (req, res) => {
   try {
     // Hashear la contraseña antes de guardarla en la base de datos
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    
 
     // Crear un nuevo usuario
     const newUser = new User({
-
-      id: req.body.id,
       nombre: req.body.nombre,
       apellido: req.body.apellido,
       email: req.body.email,
-      contraseña: hashedPassword,
-      registroFecha: req.body.registroFecha, 
-      estadoVerificacion: req.body.estadoVerificacion
+      password: hashedPassword, // Utiliza la contraseña hasheada
     });
 
     // Guardar el usuario en la base de datos
