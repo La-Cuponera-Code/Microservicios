@@ -3,16 +3,17 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
-import  vendedorRoutes  from './src/routes/vendedoresRoutes.js';
-import uploadRoutes from './src/routes/uploadRotes.js';
-import {MONGO_URI, MONGO_DB_NAME_PROD, MONGO_DB_NAME_TEST} from "./src/config/config.js"
+import vendedorRoutes from './src/routes/vendedoresRoutes.js';
+import uploadRoutes from './src/routes/uploadRoutes.js';
+import { MONGO_URI, MONGO_DB_NAME_PROD, MONGO_DB_NAME_TEST } from './src/config/config.js';
+import fs from 'fs';
+import { conexion_App,  } from './src/config/database.js';
 
 
 // Configuración de Express
 const app = express();
 const PORT = process.env.PORT || 5000;
-const swaggerDocument = YAML.load/* ('./src/doc/Vendedores.yaml') */;
+
 
 // Middleware
 app.use(bodyParser.json());
@@ -23,15 +24,42 @@ app.use('/public', express.static('public'));
 
 
 
-// Conexión a MongoDB 
+// Conexión a MongoDB
 mongoose.connect(`${MONGO_URI}${MONGO_DB_NAME_PROD}`)
   .then(() => console.log('Conexión a MongoDB establecida'))
   .catch(err => console.error('Error al conectar con MongoDB:', err));
 
+  const swaggerDocumentPath = 'src/doc/Vendedores.json';
+  let swaggerDocument;
+  try {
+    console.log('Intentando leer el archivo JSON de Swagger...');
+    const rawData = fs.readFileSync(swaggerDocumentPath);
+    swaggerDocument = JSON.parse(rawData);
+    console.log('Archivo JSON de Swagger cargado correctamente:', swaggerDocument);
+  } catch (error) {
+    console.error('Error al cargar el archivo JSON de Swagger:', error);
+  }
+
 // Rutas de la API
 app.use('/api/vendedores', vendedorRoutes);
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use('/upload', uploadRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Usar Swagger UI
+if (swaggerDocument) {
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} else {
+  console.error('No se pudo cargar el archivo JSON de Swagger.');
+}
+
+// Mensaje de confirmación de conexión
+conexion_App.getConnection((err, connection) => {
+  if (err) {
+    console.error('Error al conectar con la base de datos de la aplicación:', err.message);
+  } else {
+    console.log('Conexión establecida con la base de datos de la aplicación');
+    connection.release();
+  } 
+});
 
 
 // Manejo de rutas no encontradas
